@@ -1,10 +1,17 @@
-from django_elasticsearch_dsl import Document
+from django_elasticsearch_dsl import Document, fields, Index
 from django_elasticsearch_dsl.registries import registry
 from api.models import CustomUser
 
 
 @registry.register_document
 class UserDocument(Document):
+    name = fields.TextField(
+        attr='name',
+        fields={
+            'suggest': fields.Completion(),
+        }
+    )
+
     class Index:
         name = 'users'
         settings = {
@@ -14,4 +21,4 @@ class UserDocument(Document):
 
     class Django:
         model = CustomUser
-        fields = ['id', 'name', 'email', 'phone']
+        fields = ['id', 'email', 'phone']
