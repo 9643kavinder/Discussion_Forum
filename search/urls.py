@@ -1,5 +1,5 @@
 from rest_framework.routers import SimpleRouter
-
+from django.urls import path, include
 from . import views
 
 
@@ -11,4 +11,7 @@ router.register(
     basename='users',
     viewset=views.UserViewSet
 )
-urlpatterns = router.urls
+urlpatterns = [
+    path('', include(router.urls)),
+    path('user/<str:name>/', views.search_user, name="search_user")
+]

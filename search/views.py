@@ -18,6 +18,8 @@ from django_elasticsearch_dsl_drf.viewsets import DocumentViewSet
 
 from .documents import UserDocument
 from .serializers import UserDocumentSerializer
+from elasticsearch import Elasticsearch
+from django.http import JsonResponse
 
 
 class UserViewSet(DocumentViewSet):
@@ -61,3 +63,16 @@ class UserViewSet(DocumentViewSet):
             ],
         },
     }
+
+
+def search_user(request, name):
+    es = Elasticsearch()
+    res = es.search(index="users", body={
+  "query": {
+    "query_string": {
+      "query": f"({name}*)",
+      "default_field": "name"
+    }
+  }
+})
+    return JsonResponse(res)
