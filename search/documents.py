@@ -32,8 +32,12 @@ class DiscussionDocument(Document):
         attr="message",
         analyzer="english"
     )
-    speciality = fields.ObjectField(properties={
-        'name': fields.TextField(attr="name", analyzer="standard"),
+    # speciality = fields.ObjectField(properties={
+    #     'name': fields.TextField(attr="name", analyzer="standard"),
+    # }, attr="tags")
+    speciality = fields.NestedField(properties={
+        'id': fields.KeywordField(attr='id'),
+        'name': fields.TextField(attr="name", analyzer="standard")
     }, attr="tags")
 
     class Index:

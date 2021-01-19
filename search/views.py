@@ -7,6 +7,7 @@ from django_elasticsearch_dsl_drf.constants import (
     LOOKUP_QUERY_LTE,
     SUGGESTER_COMPLETION,
 )
+from django.views.decorators.csrf import csrf_exempt
 from django_elasticsearch_dsl_drf.filter_backends import (
     DefaultOrderingFilterBackend,
     FacetedSearchFilterBackend,
@@ -68,11 +69,104 @@ class UserViewSet(DocumentViewSet):
 def search_user(request, name):
     es = Elasticsearch()
     res = es.search(index="users", body={
-  "query": {
-    "query_string": {
-      "query": f"({name}*)",
-      "default_field": "name"
-    }
-  }
-})
+    "query": {
+        "query_string": {
+            "query": f"({name}*)",
+            "default_field": "name"
+            }
+        }
+    })
     return JsonResponse(res)
+
+
+def search_discussion_basis_on_id(request, index):
+    es = Elasticsearch()
+    res = es.search(index="posts", body={
+        "query": {
+            "nested": {
+                "path": "speciality",
+                "query": {
+                    "bool": {
+                        "must": [
+                            {"match": {"speciality.id": f"{index}"}}
+                        ]
+                    }
+                }
+            }
+        }
+    })
+    return JsonResponse(res)
+
+
+def search_discussion_basis_on_message(request, message):
+    es = Elasticsearch()
+    res = es.search(index="posts", body={
+    "query": {
+        "query_string": {
+            "query": f"({message}*)",
+            "default_field": "message"
+            }
+        }
+    })
+    return JsonResponse(res)
+
+
+def should_discussion_basis_on_list(request):
+    list_of_specialities = request.GET.get('list_of_specialities')
+    print(list_of_specialities)
+    specialities = list_of_specialities.strip('][')
+    specialities = specialities.split(",")
+    print(specialities)
+    es = Elasticsearch()
+    match_records = []
+    for speciality in specialities:
+        match = {
+            "match": {
+                "speciality.name": f"{speciality[1:-1]}"
+            }
+        }
+        match_records.append(match)
+    print(match_records)
+    res = es.search(index="posts", body={
+        "query": {
+            "nested": {
+                "path": "speciality",
+                "query": {
+                    "bool": {
+                        "should": match_records
+                    }
+                }
+            }
+        }
+    })
+    return JsonResponse(res)
+
+
+def must_discussion_basis_on_list(request):
+    list_of_specialities = request.GET.get('list_of_specialities')
+    specialities = list_of_specialities.strip('][')
+    specialities = specialities.split(",")
+    es = Elasticsearch()
+    match_records = []
+    for speciality in specialities:
+        match = {
+            "match": {
+                "speciality.name": f"{speciality[1:-1]}"
+            }
+        }
+        match_records.append(match)
+    res = es.search(index="posts", body={
+        "query": {
+            "nested": {
+                "path": "speciality",
+                "query": {
+                    "bool": {
+                        "must": match_records
+                    }
+                }
+            }
+        }
+    })
+    return JsonResponse(res)
+
+
